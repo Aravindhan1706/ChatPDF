@@ -1,5 +1,5 @@
-def main():
-    print("Hello from chatpdf!")
+def main() -> None:
+    """Application entry point."""
 
 
 if __name__ == "__main__":

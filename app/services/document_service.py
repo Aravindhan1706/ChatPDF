@@ -1,0 +1,47 @@
+from pathlib import Path
+from shutil import copyfileobj
+
+from fastapi import HTTPException, UploadFile
+from langchain_community.document_loaders import PyPDFLoader
+
+
+class DocumentService:
+    """Service for handling document operations."""
+
+    STORAGE_PATH = Path("storage/documents")
+
+    def save_document(self, file: UploadFile) -> dict:
+        """Validate and save an uploaded PDF."""
+
+        if file.content_type != "application/pdf":
+            raise HTTPException(
+                status_code=400,
+                detail="Only PDF files are allowed.",
+            )
+
+        self.STORAGE_PATH.mkdir(parents=True, exist_ok=True)
+
+        destination = self.STORAGE_PATH / file.filename
+
+        with destination.open("wb") as buffer:
+            copyfileobj(file.file, buffer)
+
+        file.file.seek(0)
+
+        return {
+            "filename": file.filename,
+            "content_type": file.content_type,
+            "size": destination.stat().st_size,
+            "path": destination.as_posix(),
+        }
+
+    def extract_text(self, pdf_path: str) -> str:
+        """Extract all text from a PDF."""
+
+        loader = PyPDFLoader(pdf_path)
+
+        documents = loader.load()
+
+        text = "\n".join(doc.page_content for doc in documents)
+
+        return text

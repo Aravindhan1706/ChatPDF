@@ -1,0 +1,22 @@
+from fastapi import FastAPI
+
+from app.api.routes.documents import router as documents_router
+from app.api.routes.health import router as health_router
+from app.core.config import settings
+
+
+def create_application() -> FastAPI:
+    """Create and configure the FastAPI application."""
+
+    app = FastAPI(
+        title=settings.app.name,
+        debug=settings.app.debug,
+    )
+
+    app.include_router(health_router)
+    app.include_router(documents_router)
+
+    return app
+
+
+app = create_application()
