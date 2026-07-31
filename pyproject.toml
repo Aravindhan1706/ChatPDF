@@ -5,8 +5,12 @@ description = "Production-ready multi-user ChatPDF backend built with FastAPI an
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "chromadb>=1.5.9",
     "fastapi>=0.139.2",
+    "langchain-chroma>=1.1.0",
     "langchain-community>=0.4.2",
+    "langchain-ollama>=1.1.0",
+    "langchain-text-splitters>=1.1.2",
     "pydantic-settings>=2.14.2",
     "pypdf>=6.14.2",
     "python-dotenv>=1.2.2",
