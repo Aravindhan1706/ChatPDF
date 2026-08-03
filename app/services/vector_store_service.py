@@ -2,13 +2,16 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_ollama import OllamaEmbeddings
 
+from app.core.config import settings
+from app.schemas.document_metadata import DocumentMetadata
+
 
 class VectorStoreService:
     """Service responsible for storing and retrieving document vectors."""
 
     def __init__(self) -> None:
         self.embedding_model = OllamaEmbeddings(
-            model="mxbai-embed-large",
+            model=settings.models.embedding_model,
         )
 
         self.vector_store = Chroma(
@@ -20,7 +23,7 @@ class VectorStoreService:
     def add_documents(
         self,
         chunks: list[str],
-        filename: str,
+        document: DocumentMetadata,
     ) -> None:
         """Store document chunks in ChromaDB."""
 
@@ -31,10 +34,23 @@ class VectorStoreService:
                 Document(
                     page_content=chunk,
                     metadata={
-                        "filename": filename,
+                        "document_id": str(document.document_id),
+                        "filename": document.filename,
                         "chunk": index,
                     },
                 )
             )
 
         self.vector_store.add_documents(documents)
+
+    def similarity_search(
+        self,
+        query: str,
+        k: int = 5,
+    ) -> list[Document]:
+        """Search similar document chunks."""
+
+        return self.vector_store.similarity_search(
+            query=query,
+            k=k,
+        )

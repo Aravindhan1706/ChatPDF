@@ -4,13 +4,15 @@ from shutil import copyfileobj
 from fastapi import HTTPException, UploadFile
 from langchain_community.document_loaders import PyPDFLoader
 
+from app.schemas.document_metadata import DocumentMetadata
+
 
 class DocumentService:
     """Service for handling document operations."""
 
     STORAGE_PATH = Path("storage/documents")
 
-    def save_document(self, file: UploadFile) -> dict:
+    def save_document(self, file: UploadFile) -> DocumentMetadata:
         """Validate and save an uploaded PDF."""
 
         if file.content_type != "application/pdf":
@@ -28,12 +30,12 @@ class DocumentService:
 
         file.file.seek(0)
 
-        return {
-            "filename": file.filename,
-            "content_type": file.content_type,
-            "size": destination.stat().st_size,
-            "path": destination.as_posix(),
-        }
+        return DocumentMetadata(
+            filename=file.filename,
+            content_type=file.content_type,
+            size=destination.stat().st_size,
+            path=destination.as_posix(),
+        )
 
     def extract_text(self, pdf_path: str) -> str:
         """Extract all text from a PDF."""

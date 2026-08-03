@@ -1,4 +1,4 @@
-from app.core.settings import AppSettings
+from app.core.settings import AppSettings, ModelSettings
 
 
 class Settings:
@@ -6,6 +6,7 @@ class Settings:
 
     def __init__(self) -> None:
         self.app = AppSettings()
+        self.models = ModelSettings()
 
 
 settings = Settings()

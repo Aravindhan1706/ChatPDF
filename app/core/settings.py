@@ -18,3 +18,10 @@ class AppSettings(SettingsBase):
     name: str = Field(alias="APP_NAME")
     env: str = Field(alias="APP_ENV")
     debug: bool = Field(alias="DEBUG")
+
+
+class ModelSettings(SettingsBase):
+    """Model configuration settings."""
+
+    llm_model: str = Field(alias="LLM_MODEL")
+    embedding_model: str = Field(alias="EMBEDDING_MODEL")
