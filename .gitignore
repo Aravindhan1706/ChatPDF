@@ -42,3 +42,12 @@ htmlcov/
 # ==========================================
 .DS_Store
 Thumbs.db
+
+# ==========================================
+# ChatPDF Storage & Vector Database
+# ==========================================
+# Uploaded documents
+storage/documents/
+
+# Chroma vector database
+chroma_db/
