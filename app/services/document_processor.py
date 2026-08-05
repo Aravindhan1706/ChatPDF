@@ -1,6 +1,8 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from app.core.exceptions import DocumentProcessingError
+
 
 class DocumentProcessor:
     """Service responsible for processing PDF documents."""
@@ -8,10 +10,15 @@ class DocumentProcessor:
     def extract_text(self, pdf_path: str) -> str:
         """Extract text from a PDF."""
 
-        loader = PyPDFLoader(pdf_path)
-        documents = loader.load()
+        try:
+            loader = PyPDFLoader(pdf_path)
+            documents = loader.load()
+            return "\n".join(doc.page_content for doc in documents)
 
-        return "\n".join(doc.page_content for doc in documents)
+        except Exception as exc:
+            raise DocumentProcessingError(
+                "Failed to extract text from the uploaded document."
+            ) from exc
 
     def chunk_text(
         self,

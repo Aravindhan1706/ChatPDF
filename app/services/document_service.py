@@ -1,9 +1,10 @@
 from pathlib import Path
 from shutil import copyfileobj
 
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile
 from langchain_community.document_loaders import PyPDFLoader
 
+from app.core.exceptions import DocumentProcessingError
 from app.schemas.document_metadata import DocumentMetadata
 
 
@@ -15,35 +16,50 @@ class DocumentService:
     def save_document(self, file: UploadFile) -> DocumentMetadata:
         """Validate and save an uploaded PDF."""
 
-        if file.content_type != "application/pdf":
-            raise HTTPException(
-                status_code=400,
-                detail="Only PDF files are allowed.",
+        try:
+            if file.content_type != "application/pdf":
+                raise DocumentProcessingError("Only PDF files are allowed.")
+
+            self.STORAGE_PATH.mkdir(
+                parents=True,
+                exist_ok=True,
             )
 
-        self.STORAGE_PATH.mkdir(parents=True, exist_ok=True)
+            destination = self.STORAGE_PATH / file.filename
 
-        destination = self.STORAGE_PATH / file.filename
+            with destination.open("wb") as buffer:
+                copyfileobj(file.file, buffer)
 
-        with destination.open("wb") as buffer:
-            copyfileobj(file.file, buffer)
+            file.file.seek(0)
 
-        file.file.seek(0)
+            return DocumentMetadata(
+                filename=file.filename,
+                content_type=file.content_type,
+                size=destination.stat().st_size,
+                path=destination.as_posix(),
+            )
 
-        return DocumentMetadata(
-            filename=file.filename,
-            content_type=file.content_type,
-            size=destination.stat().st_size,
-            path=destination.as_posix(),
-        )
+        except DocumentProcessingError:
+            raise
+
+        except Exception as exc:
+            raise DocumentProcessingError(
+                "Failed to save the uploaded document."
+            ) from exc
 
     def extract_text(self, pdf_path: str) -> str:
         """Extract all text from a PDF."""
 
-        loader = PyPDFLoader(pdf_path)
+        try:
+            loader = PyPDFLoader(pdf_path)
 
-        documents = loader.load()
+            documents = loader.load()
 
-        text = "\n".join(doc.page_content for doc in documents)
+            text = "\n".join(document.page_content for document in documents)
 
-        return text
+            return text
+
+        except Exception as exc:
+            raise DocumentProcessingError(
+                "Failed to extract text from the uploaded document."
+            ) from exc

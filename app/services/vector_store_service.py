@@ -3,6 +3,7 @@ from langchain_core.documents import Document
 from langchain_ollama import OllamaEmbeddings
 
 from app.core.config import settings
+from app.core.exceptions import VectorStoreError
 from app.schemas.document_metadata import DocumentMetadata
 
 
@@ -27,21 +28,25 @@ class VectorStoreService:
     ) -> None:
         """Store document chunks in ChromaDB."""
 
-        documents = []
+        try:
+            documents = []
 
-        for index, chunk in enumerate(chunks):
-            documents.append(
-                Document(
-                    page_content=chunk,
-                    metadata={
-                        "document_id": str(document.document_id),
-                        "filename": document.filename,
-                        "chunk": index,
-                    },
+            for index, chunk in enumerate(chunks):
+                documents.append(
+                    Document(
+                        page_content=chunk,
+                        metadata={
+                            "document_id": str(document.document_id),
+                            "filename": document.filename,
+                            "chunk": index,
+                        },
+                    )
                 )
-            )
 
-        self.vector_store.add_documents(documents)
+            self.vector_store.add_documents(documents)
+
+        except Exception as exc:
+            raise VectorStoreError("Failed to store document embeddings.") from exc
 
     def similarity_search(
         self,
@@ -50,7 +55,11 @@ class VectorStoreService:
     ) -> list[Document]:
         """Search similar document chunks."""
 
-        return self.vector_store.similarity_search(
-            query=query,
-            k=k,
-        )
+        try:
+            return self.vector_store.similarity_search(
+                query=query,
+                k=k,
+            )
+
+        except Exception as exc:
+            raise VectorStoreError("Failed to search the vector database.") from exc

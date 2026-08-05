@@ -2,6 +2,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import OllamaLLM
 
 from app.core.config import settings
+from app.core.exceptions import LLMError
 
 
 class LLMService:
@@ -16,25 +17,23 @@ class LLMService:
 
         self.prompt = ChatPromptTemplate.from_template(
             """
-                You are a helpful AI assistant.
+You are a helpful AI assistant.
 
-                Answer the user's question ONLY using the provided context.
+Answer the user's question ONLY using the provided context.
 
-                If the answer is not present in the context, say:
+If the answer is not present in the context, say:
 
-                "I couldn't find that information in the uploaded documents."
+"I couldn't find that information in the uploaded documents."
 
-                Context:
-                {context}
+Context:
+{context}
 
-                Question:
-                {question}
-            """
+Question:
+{question}
+"""
         )
 
         self.chain = self.prompt | self.llm
-
-        print(f"Using model: {settings.models.llm_model}")
 
     def generate_answer(
         self,
@@ -43,9 +42,13 @@ class LLMService:
     ) -> str:
         """Generate an answer using the retrieved context."""
 
-        return self.chain.invoke(
-            {
-                "context": context,
-                "question": question,
-            }
-        )
+        try:
+            return self.chain.invoke(
+                {
+                    "context": context,
+                    "question": question,
+                }
+            )
+
+        except Exception as exc:
+            raise LLMError("Failed to generate an answer.") from exc
