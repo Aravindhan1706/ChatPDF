@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from shutil import copyfileobj
 
@@ -6,6 +7,8 @@ from langchain_community.document_loaders import PyPDFLoader
 
 from app.core.exceptions import DocumentProcessingError
 from app.schemas.document_metadata import DocumentMetadata
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentService:
@@ -17,6 +20,11 @@ class DocumentService:
         """Validate and save an uploaded PDF."""
 
         try:
+            logger.info(
+                "Processing uploaded document: %s",
+                file.filename,
+            )
+
             if file.content_type != "application/pdf":
                 raise DocumentProcessingError("Only PDF files are allowed.")
 
@@ -31,6 +39,11 @@ class DocumentService:
                 copyfileobj(file.file, buffer)
 
             file.file.seek(0)
+
+            logger.info(
+                "Document saved successfully: %s",
+                destination,
+            )
 
             return DocumentMetadata(
                 filename=file.filename,
@@ -51,11 +64,21 @@ class DocumentService:
         """Extract all text from a PDF."""
 
         try:
+            logger.info(
+                "Extracting text from: %s",
+                pdf_path,
+            )
+
             loader = PyPDFLoader(pdf_path)
 
             documents = loader.load()
 
             text = "\n".join(document.page_content for document in documents)
+
+            logger.info(
+                "Successfully extracted text from: %s",
+                pdf_path,
+            )
 
             return text
 

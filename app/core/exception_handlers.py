@@ -16,12 +16,18 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: ChatPDFException,
     ) -> JSONResponse:
+        logger.error(
+            "%s: %s",
+            exc.error_code,
+            exc.message,
+        )
+
         return JSONResponse(
-            status_code=400,
+            status_code=exc.status_code,
             content={
                 "success": False,
                 "error": {
-                    "type": exc.__class__.__name__,
+                    "code": exc.error_code,
                     "message": exc.message,
                 },
             },
@@ -39,7 +45,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             content={
                 "success": False,
                 "error": {
-                    "type": "InternalServerError",
+                    "code": "INTERNAL_SERVER_ERROR",
                     "message": "An unexpected error occurred.",
                 },
             },
